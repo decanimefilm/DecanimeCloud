@@ -1,21 +1,20 @@
 import os
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # 🚨 Ini WAJIB kalau deploy di Zeabur/Replit
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # WAJIB kalau pakai HTTP (misal di Zeabur)
 
-from flask import Flask, redirect, request, session, url_for
-import google.oauth2.credentials
+from flask import Flask, redirect, request, session
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 
 app = Flask(__name__)
-app.secret_key = 'rahasia-bro'  # ganti di production
+app.secret_key = 'rahasia-bro'  # ganti ini kalo production
 
-# GANTI SESUAI DATA KAMU
+# SETTING
 CLIENT_ID = '129791644041-km8ro654n14blt1dboqdi37o3ju92bhf.apps.googleusercontent.com'
 CLIENT_SECRET = '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'
 REDIRECT_URI = 'https://decanimecloud.zeabur.app/oauth2callback'
 FILE_ID_TO_COPY = '1hPI1l9cXJw5CGTMuV2P2dvHneAXz-gqW'
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+SCOPES = ['https://www.googleapis.com/auth/drive']  # ✅ fix biar bisa copy public file
 
 @app.route('/')
 def index():
@@ -61,12 +60,13 @@ def oauth2callback():
     credentials = flow.credentials
     service = build('drive', 'v3', credentials=credentials)
 
+    # ✅ copy file ke root user
     copied_file = service.files().copy(
         fileId=FILE_ID_TO_COPY,
         body={"name": "Copy dari Bot"}
     ).execute()
 
-    return f'✅ File berhasil dicopy! <br>ID: {copied_file["id"]}'
+    return f'✅ File berhasil dicopy ke akun kamu!<br>ID: {copied_file["id"]}'
 
 if __name__ == '__main__':
     app.run(debug=True)
