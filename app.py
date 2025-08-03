@@ -68,5 +68,16 @@ def oauth2callback():
 
     return f'✅ File berhasil dicopy ke akun kamu!<br>ID: {copied_file["id"]}'
 
+
+@app.route('/testdns')
+def testdns():
+    import socket
+    try:
+        ip = socket.gethostbyname('oauth2.googleapis.com')
+        return f'✅ Sukses resolve: {ip}'
+    except Exception as e:
+        return f'❌ Gagal resolve: {str(e)}'
+
+
 if __name__ == '__main__':
     app.run(debug=True)
