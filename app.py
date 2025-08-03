@@ -1,3 +1,6 @@
+import os
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # 🚨 Ini WAJIB kalau deploy di Zeabur/Replit
+
 from flask import Flask, redirect, request, session, url_for
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
