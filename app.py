@@ -13,7 +13,7 @@ CLIENT_ID = '129791644041-km8ro654n14blt1dboqdi37o3ju92bhf.apps.googleuserconten
 CLIENT_SECRET = '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'
 REDIRECT_URI = 'https://decanimecloud.zeabur.app/oauth2callback'
 FILE_ID_TO_COPY = '1hPI1l9cXJw5CGTMuV2P2dvHneAXz-gqW'
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
 
 @app.route('/')
 def index():
