@@ -1,20 +1,19 @@
 import os
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # WAJIB kalau pakai HTTP (misal di Zeabur)
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-from flask import Flask, redirect, request, session
+from flask import Flask, redirect, request, session, url_for
+import google.oauth2.credentials
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 
 app = Flask(__name__)
-app.secret_key = 'rahasia-bro'  # ganti ini kalo production
+app.secret_key = 'rahasia-bro'
 
-# SETTING
 CLIENT_ID = '129791644041-km8ro654n14blt1dboqdi37o3ju92bhf.apps.googleusercontent.com'
 CLIENT_SECRET = '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'
 REDIRECT_URI = 'https://decanimecloud.zeabur.app/oauth2callback'
 FILE_ID_TO_COPY = '1hPI1l9cXJw5CGTMuV2P2dvHneAXz-gqW'
-
-SCOPES = ['https://www.googleapis.com/auth/drive']  # ✅ fix biar bisa copy public file
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 @app.route('/')
 def index():
@@ -35,13 +34,20 @@ def auth():
         scopes=SCOPES
     )
     flow.redirect_uri = REDIRECT_URI
-    authorization_url, state = flow.authorization_url(access_type='offline', include_granted_scopes='true')
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='consent'  # <--- wajib biar token refresh bisa didapat
+    )
     session['state'] = state
     return redirect(authorization_url)
 
 @app.route('/oauth2callback')
 def oauth2callback():
-    state = session['state']
+    state = session.get('state')
+    if not state:
+        return 'Session expired or invalid. Please <a href="/auth">try again</a>.'
+
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         {
             "web": {
@@ -56,28 +62,24 @@ def oauth2callback():
         state=state
     )
     flow.redirect_uri = REDIRECT_URI
-    flow.fetch_token(authorization_response=request.url)
+
+    try:
+        flow.fetch_token(authorization_response=request.url)
+    except Exception as e:
+        return f'❌ Error fetching token: {e}'
+
     credentials = flow.credentials
     service = build('drive', 'v3', credentials=credentials)
 
-    # ✅ copy file ke root user
-    copied_file = service.files().copy(
-        fileId=FILE_ID_TO_COPY,
-        body={"name": "Copy dari Bot"}
-    ).execute()
-
-    return f'✅ File berhasil dicopy ke akun kamu!<br>ID: {copied_file["id"]}'
-
-
-@app.route('/testdns')
-def testdns():
-    import socket
     try:
-        ip = socket.gethostbyname('oauth2.googleapis.com')
-        return f'✅ Sukses resolve: {ip}'
+        copied_file = service.files().copy(
+            fileId=FILE_ID_TO_COPY,
+            body={"name": "Copy dari Bot"}
+        ).execute()
     except Exception as e:
-        return f'❌ Gagal resolve: {str(e)}'
+        return f'❌ Error saat menyalin file: {e}'
 
+    return f'✅ File berhasil disalin ke Drive kamu!<br>ID: {copied_file["id"]}'
 
 if __name__ == '__main__':
     app.run(debug=True)
