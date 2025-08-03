@@ -5,7 +5,6 @@ from flask import Flask, redirect, request, session, url_for
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
-import os
 
 app = Flask(__name__)
 app.secret_key = 'rahasia-bro'  # ganti di production
